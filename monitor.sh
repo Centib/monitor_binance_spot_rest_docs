@@ -14,6 +14,12 @@ log() {
 log_separator() {
     log "------------------------------------------------------------"
 }
+check_cmd() {
+    command -v "$1" >/dev/null 2>&1 || {
+        echo "❌ Dependency '$1' is missing. Please install it before running this script."
+        exit 1
+    }
+}
 
 # --- Help ---
 show_help() {
@@ -21,6 +27,7 @@ show_help() {
 Usage: ./monitor.sh [options]
 
 Options:
+  --check-deps     Check that all required dependencies are installed and exit
   --test-log       Write a test entry to the log file
   --test-discord   Send a test message to Discord (if webhook is set)
   -h, --help       Show this help message and exit
@@ -36,10 +43,27 @@ Description:
 EOF
 }
 
+# --- Check dependencies ---
+check_deps() {
+    log "Checking dependencies..."
+    check_cmd git
+    check_cmd bash
+    if [ -n "${MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK:-}" ]; then
+        check_cmd curl
+        check_cmd python3
+    fi
+    log "✅ All required dependencies are installed."
+}
+
 # --- Argument handling ---
 case "${1:-}" in
 -h | --help)
     show_help
+    exit 0
+    ;;
+--check-deps)
+    check_deps
+    log_separator
     exit 0
     ;;
 --test-log)
@@ -56,8 +80,8 @@ case "${1:-}" in
         curl -s -H "Content-Type: application/json" \
             -X POST \
             -d "{\"content\": $ESCAPED_MSG}" \
-            "$MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK" >/dev/null
-        log "$TIMESTAMP 🔵 Discord webhook test sent successfully"
+            "$MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK" &>/dev/null
+        log "$TIMESTAMP 🔵 Discord test sent successfully"
     else
         log "$TIMESTAMP 🟡 Discord webhook not set, skipping test"
     fi
@@ -90,20 +114,21 @@ else
     DIFF=$(git diff origin/master -- rest-api.md)
     echo "$DIFF" >>"$LOG_FILE"
 
-    # --- Optional: truncate large diffs ---
+    # --- Optional: truncate large diffs for Discord ---
     MAX_LENGTH=1800
+    TRUNCATED_DIFF="$DIFF"
     if [ ${#DIFF} -gt $MAX_LENGTH ]; then
-        DIFF="${DIFF:0:$MAX_LENGTH}\n... (truncated)"
+        TRUNCATED_DIFF="${DIFF:0:$MAX_LENGTH}\n... (truncated for Discord)"
     fi
 
     # --- Send Discord notification if webhook is set ---
     if [ -n "${MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK:-}" ]; then
-        PAYLOAD="$HEADER\n$DIFF"
+        PAYLOAD="$HEADER\n$TRUNCATED_DIFF"
         ESCAPED_PAYLOAD=$(printf '%s' "$PAYLOAD" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
         curl -s -H "Content-Type: application/json" \
             -X POST \
             -d "{\"content\": $ESCAPED_PAYLOAD}" \
-            "$MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK" >/dev/null
+            "$MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK" &>/dev/null
     else
         log "$TIMESTAMP 🟡 Discord webhook not set, skipping notification"
     fi

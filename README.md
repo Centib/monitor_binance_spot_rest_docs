@@ -131,11 +131,13 @@ The script supports additional options:
 
 ```bash
 ./monitor.sh --help
+./monitor.sh --check-deps
 ./monitor.sh --test-log
 ./monitor.sh --test-discord
 ```
 
 * `--help` → Show usage and options
+* `--check-deps`     Check that all required dependencies are installed and exit
 * `--test-log` → Write a test entry to the log file
 * `--test-discord` → Send a test message to Discord (if webhook is set)
 
@@ -147,7 +149,6 @@ The script supports additional options:
 * `git`
 * `curl` (only required if using Discord notifications)
 * `python3`
-* (Optional) Docker
 
 ---
 
