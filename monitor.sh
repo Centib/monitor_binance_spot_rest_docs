@@ -45,6 +45,7 @@ EOF
 
 # --- Check dependencies ---
 check_deps() {
+    TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
     log "Checking dependencies..."
     check_cmd git
     check_cmd bash
@@ -52,7 +53,7 @@ check_deps() {
         check_cmd curl
         check_cmd python3
     fi
-    log "✅ All required dependencies are installed."
+    log "$TIMESTAMP 🔵 All required dependencies are installed."
 }
 
 # --- Argument handling ---
