@@ -1,27 +1,28 @@
-# monitor_binance_spot_rest_docs
+# monitor\_binance\_spot\_rest\_docs
 
-A simple monitoring tool that checks for changes in Binance Spot REST API documentation (`rest-api.md`) and logs differences over time.  
+A simple monitoring tool that checks for changes in Binance Spot REST API documentation (`rest-api.md`) and logs differences over time.
 Optionally, it can send change notifications to a Discord channel via webhook.
 
 ---
 
 ## Features
 
-- Detects changes in [`rest-api.md`](https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md).
-- Logs changes in standard **git diff** format (easy to read in VS Code or any diff viewer).
-- Optional Discord notifications when changes are detected.
-- Minimal dependencies (just `git`, `bash`, and `curl`).
+* Detects changes in [`rest-api.md`](https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md)
+* Logs changes in standard **git diff** format (easy to read in VS Code or any diff viewer)
+* Optional Discord notifications when changes are detected
+* Minimal dependencies (just `git`, `bash`, `curl`, `python3`)
 
 ---
 
 ## How It Works
 
-- On each run, the script:
-  1. Fetches the latest Binance Spot REST API docs.
-  2. Compares `rest-api.md` against the latest `origin/master`.
-  3. Logs whether changes were detected into `changes.diff`.
-  4. If Discord is enabled, posts a message to your channel when changes occur.
-  5. Updates the local copy of `rest-api.md` for the next run.
+On each run, the script:
+
+1. Fetches the latest Binance Spot REST API docs.
+2. Compares `rest-api.md` against the latest `origin/master`.
+3. Logs whether changes were detected into `changes.diff`.
+4. Optionally sends messages to Discord if a webhook is configured.
+5. Updates the local copy of `rest-api.md` for the next run.
 
 ---
 
@@ -49,22 +50,35 @@ Output will be stored in `changes.diff` (next to the repo).
 
 ---
 
-## Discord Notifications (Optional)
+## Environment
 
-If you want notifications in a Discord server:
+The script optionally uses a Discord webhook to send notifications:
 
-1. Create a **Discord Webhook** (Server Settings → Integrations → Webhooks).
-2. Copy the Webhook URL.
-3. Set it as an environment variable:
+* **Environment variable:**
+  `MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK`
+  Set this to your Discord Webhook URL if you want notifications.
 
-```bash
-export MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK="https://discord.com/api/webhooks/...."
-```
+* **Example:**
 
-4. Run the script again.
+  ```bash
+  export MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK="https://discord.com/api/webhooks/XXXX/XXXX"
+  ```
 
-   - If changes are detected, a message will be sent to Discord.
-   - If no webhook is configured, only the local log is updated.
+* **Persistence:**
+  To make the variable available in every session, add it to your shell configuration file (e.g., `~/.bashrc`, `~/.zshrc`):
+
+  ```bash
+  echo 'export MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK="https://discord.com/api/webhooks/XXXX/XXXX"' >> ~/.bashrc
+  source ~/.bashrc
+  ```
+
+* **OS Compatibility:**
+  Tested on Unix-like systems (Linux, macOS). Requires:
+
+  * `bash`
+  * `git`
+  * `curl` (only if using Discord notifications)
+  * `python3` (for JSON escaping of messages)
 
 ---
 
@@ -111,12 +125,29 @@ index 0f0d65a..3fccc67 100644
 
 ---
 
+## Help & Test Modes
+
+The script supports additional options:
+
+```bash
+./monitor.sh --help
+./monitor.sh --test-log
+./monitor.sh --test-discord
+```
+
+* `--help` → Show usage and options
+* `--test-log` → Write a test entry to the log file
+* `--test-discord` → Send a test message to Discord (if webhook is set)
+
+---
+
 ## Requirements
 
-- `bash`
-- `git`
-- `curl` (only required if using Discord notifications)
-- (Optional) Docker
+* `bash`
+* `git`
+* `curl` (only required if using Discord notifications)
+* `python3`
+* (Optional) Docker
 
 ---
 
