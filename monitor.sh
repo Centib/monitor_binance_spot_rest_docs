@@ -105,14 +105,14 @@ git fetch origin
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
 # --- Check for changes ---
-if git diff --quiet origin/master -- rest-api.md; then
+if git diff --quiet HEAD..origin/master -- rest-api.md; then
     log "$TIMESTAMP 🟢 No changes in rest-api.md"
 else
     HEADER="$TIMESTAMP 🔴 Changes detected in rest-api.md"
     log "$HEADER"
 
     # Save diff to log
-    DIFF=$(git diff origin/master -- rest-api.md)
+    DIFF=$(git diff HEAD..origin/master -- rest-api.md)
     echo "$DIFF" >>"$LOG_FILE"
 
     # --- Optional: truncate large diffs for Discord ---
@@ -124,7 +124,7 @@ else
 
     # --- Send Discord notification if webhook is set ---
     if [ -n "${MONITOR_BINANCE_SPOT_REST_DOCS_DISCORD_WEBHOOK:-}" ]; then
-        PAYLOAD="$HEADER\n$TRUNCATED_DIFF"
+        PAYLOAD="$HEADER\n\`\`\`\n$TRUNCATED_DIFF\n\`\`\`"
         ESCAPED_PAYLOAD=$(printf '%s' "$PAYLOAD" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
         curl -s -H "Content-Type: application/json" \
             -X POST \
@@ -138,4 +138,4 @@ fi
 log_separator
 
 # --- Update local file to match remote ---
-git checkout origin/master -- rest-api.md
+git merge --ff-only origin/master
